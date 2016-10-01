@@ -166,5 +166,5 @@ def main():
     stopjson(path)
 
 if __name__ == '__main__':
-    #p /Users/apple/wwwroot/webapp/shadow/script/serverjsonparse.py -p /tmp/upjson -b /tmp/bak -r /Users/apple/Downloads/shadowsocks3.jsonp /Users/apple/wwwroot/webapp/shadow/script/serverjsonparse.py -p /tmp/upjson -b /tmp/bak -r /Users/apple/Downloads/shadowsocks3.json
+    #p /Users/apple/wwwroot/webapp/shadow/script/serverjsonparse.py -p /tmp/upjson -b /tmp/bak -r /Users/apple/Downloads/shadowsocks3.json
     main()

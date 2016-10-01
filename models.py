@@ -10,9 +10,9 @@ class MySQLHander(object):
     def __init__(self):
         host     = '127.0.0.1'
         username = 'root'
-        password = '123480'
+        password = '1111'
         port     = '3306'
-        database = 'shadow'
+        database = 'fucku'
         charset  = 'utf-8'
         try:
             self._conn = MySQLdb.connect(host=host,

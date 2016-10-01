@@ -21,5 +21,11 @@ mysql封装类
 ##install.sh
 安装脚本
 
-##FtpAction.py
+##ftpupload.py
 FTP上传封装类,为以后坐准备
+
+##install.sh
+安装脚本
+
+##network-analysis.sh
+流量分析脚本
