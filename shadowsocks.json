@@ -1,11 +1,12 @@
 {
-    "server": "0.0.0.0",
-    "port_password": {
-        "9999": "123"
-    }, 
-    "timeout": 600, 
-    "local_port": 1080, 
-    "local_address": "127.0.0.1", 
-    "fast_open": false, 
-    "method": "aes-256-cfb"
+ 	"server":"45.76.213.246",
+ 	"local_address": "127.0.0.1",
+ 	"local_port":1080,
+ 	 "port_password": {
+ 	    "8381": "test1",
+ 	    "8384": "foobar4"
+ 	},
+ 	"timeout":600,
+ 	"method":"rc4-md5",
+ 	"fast_open": true
 }

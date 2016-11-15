@@ -43,23 +43,30 @@ cluster(){
 
     echo -e "\033[36m update software Done! \033[0m"
     
+    homepath=~
+
     #设置shadowsocks的根目录。ss的文件上传目录
-    read -p "please input shadowsocks json root path: (default: /home/shadowjson/ssrootjsonpath)" ssrootjsonpath
-    read -p "please input shadowsocks json upload path: (default: /home/shadowjson/ssuploadjsonpath)" ssuploadjsonpath
-    read -p "please input the ss root json to bak path: (default: /home/shadowjson/ssjsonbakpath)" ssjsonbakpath
-    read -p "please input the tcp savefile path: (default:/home/shadowjson/tcpsavefile)" tcpsavefile
+    read -p "please input shadowsocks json root path: " ssrootjsonpath
+    read -p "please input shadowsocks json upload path: " ssuploadjsonpath
+    read -p "please input the ss root json to bak path: " ssjsonbakpath
+    read -p "please input the tcp savefile path: " tcpsavefile
 
-
-    if [ -z $ssrootjsonpath ];then
-        mkdir /home/shadowjson
-        ssrootjsonpath="/home/shadowjson/ssrootjsonpath"
-    elif [ -z $ssuploadjsonpath ];then
-        ssuploadjsonpath=~"/home/shadowjson/ssuploadjsonpath"
-    elif [ -z $ssjsonbakpath ];then
-        ssjsonbakpath=~"/home/shadowjson/ssjsonbakpath"
-    elif [ -z $tcpsavefile ];then
-        tcpsavefile=~"/home/shadowjson/tcpsavefile"
+    if [ "x$ssrootjsonpath" == "x" ];then
+        ssrootjsonpath=$homepath'/ssrootjsonpath'
     fi
+    
+    if [ "x$ssuploadjsonpath" == "x" ];then
+        ssuploadjsonpath=$homepath'/ssuploadjsonpath'
+    fi
+    
+    if [ "x$ssjsonbakpath" == "x" ];then
+        ssjsonbakpath=$homepath"/ssjsonbakpath"
+    fi
+    
+    if [ "x$tcpsavefile" == "x" ];then
+        tcpsavefile=$homepath"/tcpsavefile"
+    fi
+
     
     if [ ! -d "$ssrootjsonpath" ];then
         mkdir $ssrootjsonpath
@@ -67,25 +74,21 @@ cluster(){
         mkdir $ssuploadjsonpath
     elif [ ! -d "$ssjsonbakpath" ];then
         mkdir $ssjsonbakpath
-    elif [ ! -d "$tcpsavefile" ];then
-        mkdir $tcpsavefile
-    elif [ ! -d "/home/shadowjson/log" ];then
-        mkdir /home/shadowjson/log
     fi
+    
 
     cp shadowsocks.json $ssrootjsonpath
     echo -e "\033[36m setting shadowsocks path Done! \033[0m"
 
     #设置抓包脚本到crontab
-    
     program=$currentpath"/portnetwork.sh"
     cmd="0 */1 * * * /bin/sh "$program" /tmp/tcpdumpPath "$tcpsavefile
     (crontab -l 2>/dev/null | grep -Fv $program; echo "$cmd") | crontab -
     COUNT=`crontab -l | grep $program | grep -v "grep"|wc -l ` 
-    if [ $COUNT -lt 1 ]; then
+    if [ $COUNT -lt 1 ]; then 
         echo "fail to add crontab $PROGRAM" 
-        exit 1
-    fi
+        exit 1 
+    fi 
     echo -e "\033[36m setting package cap crontab command Done! \033[0m"
 
     #设置将流量文件解析并同步到数据库
@@ -101,23 +104,36 @@ cluster(){
 
     echo -e "\033[36m setting ParseStream crontab command Done! \033[0m"
     
+
     #设置解析上传json数据脚本到crontab,一小时巡检一次
     program=$currentpath"/serverjsonparse.py"
-    cmd="0 */1 * * * python $program -p $ssuploadjsonpath -b $ssjsonbakpath -r $ssrootjsonpath/shadowsocks.json"
+
+    echo
+    echo $program
+    echo
+
+    cmd="0 */1 * * * python "$program" -p "$ssuploadjsonpath" -b "$ssjsonbakpath" -r "$ssrootjsonpath"/shadowsocks.json"
     (crontab -l 2>/dev/null | grep -Fv $program; echo "$cmd") | crontab -
-    COUNT=`crontab -l | grep $program | grep -v "grep"|wc -l `
+    COUNT=`crontab -l | grep $program | grep -v "grep"|wc -l ` 
     if [ $COUNT -lt 1 ]; then
         echo "fail to add crontab $PROGRAM"
         exit 1
     fi
 
+
     echo -e "\033[36m setting parseJson crontab command Done! \033[0m"
 
     echo -e "\033[32m starting seting shadowsocks \033[0m"
     
-    nohup ssserver -c $ssrootjsonpath"/shadowsocks.json" > /home/shadowjson/log/ssserver.log 2>&1 &
+    isrun=`ps aux | grep ssserver | grep -v grep | awk -F ' ' '{print $2}'`
+    if [ ${#isrun} -ne 0 ];then
+        ssserver -c $ssrootjsonpath"/shadowsocks.json" -d start & 
+        echo -e "\033[36m  start ssserver Done! \033[0m"
+    else
+        ssserver -c $ssrootjsonpath"/shadowsocks.json" -d restart & 
+        echo -e "\033[32m start ssserver failed! \033[0m"
+    fi
 
-    echo -e "\033[36m sserver Running \033[0m"
 }
 
 
