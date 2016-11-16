@@ -16,6 +16,39 @@ logging.basicConfig(level=logging.DEBUG,
 
 logger = logging.getLogger(__name__)
 
+
+def JsonParse(cardpass, mode="gen"):
+    if mode == "gen":
+        filename = "pass_{0}.json".format(int(time.time()))
+    elif mode == "update":
+        filename = "update_{0}.json".format(int(time.time()))
+    elif mode == "stop":
+        filename = "stop_{0}.json".format(int(time.time()))
+    elif mode == "rechange":
+        filename = "rechange_{0}.json".format(int(time.time()))
+    fp = open(filename, 'wb')
+    source = json.dumps(cardpass, indent=4)
+    fp.write(source)
+    fp.close()
+    return filename
+
+#拷贝到集群
+def scp(filename):
+    # import ipdb;ipdb.set_trace()
+    path = options.rpath
+    cmd = "scp {0} fengxuan@{1}:{2}/".format(filename, "128.199.185.239", path)
+    (status, output) = shell_exec(cmd)
+    logger.info("upload file {0} to dir {1}".format(filename, path))
+    # import ipdb;ipdb.set_trace()
+    cmd = "touch {0}.SUCCESS &&scp {0}.SUCCESS fengxuan@{1}:{2}".format(filename, host[0], path)
+    (status, output) = shell_exec(cmd)
+    if status == 0:
+        logger.info("host {0} upload ok !".format(host[0]))
+    logger.info("scp ok!")
+    os.remove(filename)
+    os.remove("{0}.SUCCESS".format(filename))
+ 
+
 def parse(filename):
     data = {}
     with open(filename) as f:
@@ -23,22 +56,14 @@ def parse(filename):
             stream = line.split(' ')
             if not len(stream):
                 break
+            if int(stream[1]) < 1024:
+                continue
             if stream[1] not in data:
                 data[stream[1]] = int(stream[2].strip())
             else:
                 data[stream[1]] += int(stream[2].strip())
     logger.info('parse Done!')
-    for line in data.keys():
-        sql = "select streamcount from s_user where port={0}".format(line)
-        mysql.query(sql)
-        stream = mysql.fetchOneRow()
-        if stream is None:
-            continue
-        stream = stream[0]
-        newstream = stream - (int(data[line]) / 1024)
-        sql = "update s_user set streamcount={0} where port={1}".format(newstream, line)
-        mysql.update(sql)
-        time.sleep(0.2)
+    sco(JsonParse(data), "update")
     logger.info('update Done!')
     #确保文件删除掉了 
     unlink(filename)

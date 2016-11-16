@@ -1,14 +1,21 @@
 #!/usr/bin/env python
-# coding=utf-8
+#!coding=utf-8
 
 from __future__ import unicode_literals
 import os
 import json
+import logging
 
 from ftplib import FTP
 from ftplib import error_proto, error_perm, all_errors
 from subprocess import check_call, CalledProcessError
 from datetime import datetime, timedelta
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    datefmt='%Y/%m/%d %H:%M:%S')
+
+logger = logging.getLogger(__name__)
 
 class FtpAction(object):
     def __init__(self, host, user, pwd):
@@ -215,32 +222,33 @@ class FtpAction(object):
     def local_file_is_legal(self, filename):
         pass
 
-    def local_to_sftp(self, localpath, remotepath):
-
+    def local_to_sftp(self, localpath, remotepath, success):
         try:
             self.ftp_init()
             fp = open(localpath, 'rb')
-            success = open(get_conf_string('local', 'sucpath'), 'rb')
+            successfp = open(success, 'rb')
             logger.debug('upload %(localpath)s to %(remotepath)s...',
                          {'localpath': localpath,
                           'remotepath': remotepath})
-            self.ftp.mkd(remotepath)
+            # self.ftp.mkd(remotepath)
+            # import ipdb;ipdb.set_trace()
             self.ftp.storbinary('STOR ' + os.path.join(
-                remotepath, os.path.basename(remotepath)), fp)
-            self.ftp.storbinary('STOR ' + os.path.join(remotepath, self.flag),
-                                success)
+                remotepath, os.path.basename(localpath)), fp, 1024)
+            self.ftp.storbinary('STOR ' + os.path.join(remotepath, os.path.basename(success)), successfp, 1024)
+            successfp.close()
+            fp.close()
         except IOError:
             logger.error('FTP exception occur during uploading process, IOError')
         except OSError:
             logger.error('FTP exception occur during uploading process, OSError')
-        except error_perm:
+        except error_perm as e:
             """
             文件夹已存在，则新建时间戳+1的新文件夹
             """
-            d = os.path.dirname(remotepath)
-            f = str(int(os.path.basename(remotepath)) + 1)
-            self.local_to_sftp(localpath, os.path.join(d, f))
-        fp.close()
+            # d = os.path.dirname(remotepath)
+            # f = str(int(os.path.basename(remotepath)) + 1)
+            print e
+            self.local_to_sftp(localpath, remotepath, success)
         return remotepath
 
     def sftp_to_local(self, remotepath, localpath):

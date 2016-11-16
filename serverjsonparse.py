@@ -28,8 +28,8 @@ def shell_exec(cmd):
 
 #重启ss服务
 def restartss():
-    (status, output) = shell_exec("ssserver -d stop")
-    if status == 0 and output.find("stopped") >=0 :
+    (status, output) = shell_exec("ssserver -c /root/ssrootjsonpath/shadowsocks.json -d restart")
+    if output == 0 and output.find("stopped") >=0 :
         logger.info("restart shadow ok!")
         return True
     return False
@@ -108,7 +108,7 @@ def generatejson(path):
         with open(rootjsonfile, 'wb') as fp1:
             fp1.write(json.dumps(rootssjson, indent=4))
     restartss()
-    logger.info("update done!")
+    logger.info("update done!")s
 
 def stopjson(path):
     flag = False
@@ -143,9 +143,9 @@ def stopjson(path):
 
 def usage():
     parser = OptionParser()
-    parser.add_option("-p", "--path", type="string", dest="path", help="json path to parse", default="/home/fengxuan/upjson")
-    parser.add_option("-b", "--bak", type="string", dest="bak", help="bak path", default="/home/fengxuan/bakjson")
-    parser.add_option("-r", "--root", type="string", dest="root", help="the root json to parse", default="/tmp/shadowsocks3.json")
+    parser.add_option("-p", "--path", type="string", dest="path", help="the upload json path to parse", default="/home/shadowjson/ssuploadjsonpath")
+    parser.add_option("-b", "--bak", type="string", dest="bak", help="bak path", default="/home/shadowjson/ssjsonbakpath")
+    parser.add_option("-r", "--root", type="string", dest="root", help="the root json to parse", default="/root/ssrootjsonpath/shadowsocks.json")
     if len(sys.argv) < 2:
         parser.print_help()
         sys.exit()

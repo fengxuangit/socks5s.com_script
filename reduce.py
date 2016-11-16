@@ -7,48 +7,22 @@ import hashlib
 import sys
 import commands
 import json
-import logging  
+import logging
+from ftpupload import FtpAction
+from common import *
 from optparse import OptionParser
 
 from models import *
-
 
 cardpass = {}
 global mysql
 mysql = MySQLHander()
 
-logging.basicConfig(level=logging.DEBUG,  
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  
-                    datefmt='%Y/%m/%d %H:%M:%S'
-                    )
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    datefmt='%Y/%m/%d %H:%M:%S')
 
 logger = logging.getLogger(__name__)
-
-def shell_exec(cmd):
-    return commands.getstatusoutput(cmd)
-
-
-#拷贝到集群
-def scp(filename):
-    sql = "select hostip from s_host where zone='{0}'".format(options.zone)
-    mysql.query(sql)
-    hosts = mysql.fetchAllRows()
-    for host in hosts:
-        # import ipdb;ipdb.set_trace()
-        path = options.rpath
-        cmd = "scp {0} fengxuan@{1}:{2}/".format(filename, host[0], path)
-        (status, output) = shell_exec(cmd)
-        logger.info("upload file {0} to dir {1}".format(filename, path))
-
-        # import ipdb;ipdb.set_trace()
-        cmd = "touch {0}.SUCCESS &&scp {0}.SUCCESS fengxuan@{1}:{2}".format(filename, host[0], path)
-        (status, output) = shell_exec(cmd)
-        print output
-        if status == 0:
-            logger.info("host {0} upload ok !".format(host[0]))
-    logger.info("scp ok!")
-    os.remove(filename)
-    os.remove("{0}.SUCCESS".format(filename))
 
 
 
@@ -163,7 +137,7 @@ def usage():
     parser.add_option("-n", "--number", type="int", dest="number", help="Runmode Synchronous or Asynchronous")
     parser.add_option("-z", "--zone", type="string", dest="zone", help="host zone ", default="fuck01")
     parser.add_option("-p", "--port", type="string", dest="port", help="the port to update")
-    parser.add_option("-r", "--rpath", type="string", dest="rpath", help="remotepath to upload json", default="/home/fengxuan/updatejson/")
+    parser.add_option("-r", "--rpath", type="string", dest="rpath", help="remotepath to upload json", default="/root/ssuploadjsonpath")
     if len(sys.argv) < 2:
         parser.print_help()
         sys.exit()
@@ -182,7 +156,7 @@ def main():
 
 if __name__ == '__main__':
     #python reduce.py -z fuck01 -m generate -n 10 #生成10个ss账号
-    #python reduce.py -z fuck01 -m daily 每天巡检任务
-    #python reduce.py -z fuck01 -m async -p 10002 每天巡检任务
+    #python reduce.py -z fuck01 -m daily  -r 每天巡检任务
+    #python reduce.py -z fuck01 -m async -p 10002 更新指定端口信息
     main()
     mysql.close()

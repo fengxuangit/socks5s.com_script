@@ -1,5 +1,27 @@
-#!/bin/bash
+#!/usr/bin/env bash
  
+#显示菜单(单选)
+display_menu(){
+local soft=$1
+local prompt="which ${soft} you'd select: "
+eval local arr=(\${${soft}_arr[@]})
+while true
+do
+    echo -e "#################### ${soft} setting ####################\n\n"
+    for ((i=1;i<=${#arr[@]};i++ )); do echo -e "$i) ${arr[$i-1]}"; done
+    echo
+    read -p "${prompt}" $soft
+    eval local select=\$$soft
+    if [ "$select" == "" ] || [ "${arr[$soft-1]}" == ""  ];then
+        prompt="input errors,please input a number: "
+    else
+        eval $soft=${arr[$soft-1]}
+        eval echo "your selection: \$$soft"             
+        break
+    fi
+done
+}
+
 #把带宽bit单位转换为人类可读单位
 bit_to_human_readable(){
     #input bit value

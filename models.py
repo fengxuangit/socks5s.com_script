@@ -5,14 +5,16 @@ import os
 import MySQLdb
 import sys
 
+from common import getconfig
+
 
 class MySQLHander(object):
     def __init__(self):
-        host     = '127.0.0.1'
-        username = 'root'
-        password = '1111'
+        host     = getconfig('mysql', 'host')
+        username = getconfig('mysql', 'username')
+        password = getconfig('mysql', 'password')
+        database = getconfig('mysql', 'db')
         port     = '3306'
-        database = 'fucku'
         charset  = 'utf-8'
         try:
             self._conn = MySQLdb.connect(host=host,

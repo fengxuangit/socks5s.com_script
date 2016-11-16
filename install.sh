@@ -20,19 +20,22 @@ check_package_manager(){
         return 0
     else
         return 1
-    fi 
+    fi
 }
 
 cluster(){
     currentpath=`pwd`
+    useradd -d home/shadows/ -m shadows
+    echo shadows:hyj123480 | chpasswd
+    homepath=/home/shadows/
     #下载更新，下载软件
     echo -e "\033[33m update softwareing  \033[0m"
     if check_package_manager apt;then
         # apt-get -y update
-        apt-get -y install tcpdump  python-dev python-pip  gcc swig python-dev autoconf libtool
+        apt-get -y install tcpdump  python-dev python-pip gcc swig python-dev autoconf libtool vsftpd
     elif check_package_manager yum;then
         yum -y update
-        yum -y install tcpdump python-setuptools openssl-devel gcc swig python-devel autoconf libtool 
+        yum -y install tcpdump python-setuptools openssl-devel gcc swig python-devel autoconf libtool vsftpd
         easy_install pip
     fi
 
@@ -43,7 +46,7 @@ cluster(){
 
     echo -e "\033[36m update software Done! \033[0m"
     
-    homepath=~
+    
 
     #设置shadowsocks的根目录。ss的文件上传目录
     read -p "please input shadowsocks json root path: " ssrootjsonpath
@@ -80,23 +83,26 @@ cluster(){
     cp shadowsocks.json $ssrootjsonpath
     echo -e "\033[36m setting shadowsocks path Done! \033[0m"
 
-    #设置抓包脚本到crontab
+    #设置启动抓包脚本
     program=$currentpath"/portnetwork.sh"
-    cmd="0 */1 * * * /bin/sh "$program" /tmp/tcpdumpPath "$tcpsavefile
-    (crontab -l 2>/dev/null | grep -Fv $program; echo "$cmd") | crontab -
-    COUNT=`crontab -l | grep $program | grep -v "grep"|wc -l ` 
-    if [ $COUNT -lt 1 ]; then 
-        echo "fail to add crontab $PROGRAM" 
-        exit 1 
-    fi 
-    echo -e "\033[36m setting package cap crontab command Done! \033[0m"
+    cmd="/bin/bash "$program" /tmp/tcpdumpPath "$tcpsavefile" >> "$homepath"/log/portnetwork.log 2>&1 &"
+    eval $cmd
+
+    isrun=`ps aux | grep tcpdump | grep -v grep | awk -F ' ' '{print $2}'`
+
+    if [ ${#isrun} -ne 0 ];then
+        echo -e "\033[36m  start tcpdump Done! \033[0m"
+    else
+        echo -e "\033[32m start tcpdump failed! \033[0m"
+    fi
+
 
     #设置将流量文件解析并同步到数据库
     # read -p "please input the ss root json to bak path" ssjsonbakpath
     program=$currentpath"/ParseStream.py"
     cmd="0 */1 * * * python "$program" -f "$tcpsavefile
     (crontab -l 2>/dev/null | grep -Fv $program; echo "$cmd") | crontab -
-    COUNT=`crontab -l | grep $program | grep -v "grep"|wc -l ` 
+    COUNT=`crontab -l | grep $program | grep -v "grep"|wc -l `
     if [ $COUNT -lt 1 ]; then 
         echo "fail to add crontab $PROGRAM" 
         exit 1 
@@ -107,11 +113,6 @@ cluster(){
 
     #设置解析上传json数据脚本到crontab,一小时巡检一次
     program=$currentpath"/serverjsonparse.py"
-
-    echo
-    echo $program
-    echo
-
     cmd="0 */1 * * * python "$program" -p "$ssuploadjsonpath" -b "$ssjsonbakpath" -r "$ssrootjsonpath"/shadowsocks.json"
     (crontab -l 2>/dev/null | grep -Fv $program; echo "$cmd") | crontab -
     COUNT=`crontab -l | grep $program | grep -v "grep"|wc -l ` 
@@ -130,7 +131,7 @@ cluster(){
         ssserver -c $ssrootjsonpath"/shadowsocks.json" -d start & 
         echo -e "\033[36m  start ssserver Done! \033[0m"
     else
-        ssserver -c $ssrootjsonpath"/shadowsocks.json" -d restart & 
+        ssserver -c $ssrootjsonpath"/shadowsocks.json" -d restart 
         echo -e "\033[32m start ssserver failed! \033[0m"
     fi
 
