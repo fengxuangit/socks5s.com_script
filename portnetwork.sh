@@ -85,8 +85,6 @@ returneth(){
 #流量和连接概览
 trafficAndConnectionOverview(){
     tcpdumpfile=$1
-    mv $tcpdumpfile $tcpdumpfile".bak"
-    tcpdumpfile=$tcpdumpfile".bak"
     savepath=$2
 
     returneth

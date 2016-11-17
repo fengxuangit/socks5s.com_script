@@ -7,6 +7,7 @@ import hashlib
 import sys
 import commands
 import json
+import string
 import logging
 from ftpupload import FtpAction
 from common import *
@@ -26,10 +27,10 @@ logger = logging.getLogger(__name__)
 
 
 
+
 #生成ss账号密码
 def generatepass(number):
     global cardpass
-    m2 = hashlib.md5()
     sql = "select max(port) from s_ssaccount"
     mysql.query(sql)
     start = mysql.fetchOneRow()
@@ -38,27 +39,10 @@ def generatepass(number):
     else:
         start = int(start[0]) + 1
     for num in xrange(start, start + number):
-        m2.update("{0}{1}".format(time.time(), random()))
-        cardpass[num] = m2.hexdigest()
+        cardpass[num] = getrandomchar()
         print num
     insertdb(cardpass)
     scp(JsonParse(cardpass))
-
-
-def JsonParse(cardpass, mode="gen"):
-    if mode == "gen":
-        filename = "pass_{0}.json".format(int(time.time()))
-    elif mode == "update":
-        filename = "update_{0}.json".format(int(time.time()))
-    elif mode == "stop":
-        filename = "stop_{0}.json".format(int(time.time()))
-    elif mode == "rechange":
-        filename = "rechange_{0}.json".format(int(time.time()))
-    fp = open(filename, 'wb')
-    source = json.dumps(cardpass, indent=4)
-    fp.write(source)
-    fp.close()
-    return filename
 
 
 def insertdb(cardpass):
@@ -101,12 +85,10 @@ def reducetime():
 
 #将用户的ss账号的密码置空, s_ssaccount账号将状态置为0，密码修改
 def deleteUser(info):
-    m2 = hashlib.md5()
-    m2.update("{0}{1}".format(time.time(), random()))
-    newpass = m2.hexdigest()
+    newpass = getrandomchar()
     sql = "update s_ssaccount set pass='{0}',status=0 where port={1}".format(newpass, info['port'])
     mysql.update(sql)
-    sql = "update s_user set port=0,sspass='' where id={0}".format(info['id'])
+    sql = "update s_user set port=0,sspass='',streamcount=0 where id={0}".format(info['id'])
     mysql.update(sql)
     updateportpass = {info['port']:newpass}
     filename = JsonParse(updateportpass, 'update')
@@ -119,7 +101,6 @@ def async(port):
     sql = "select pass from s_ssaccount where port={0}".format(port)
     mysql.query(sql)
     result = mysql.fetchOneRow()
-    # import ipdb;ipdb.set_trace()
     if result is None:
         logger.critical('No such pass or port!')
         return False

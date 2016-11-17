@@ -27,6 +27,7 @@ cluster(){
     currentpath=`pwd`
     useradd -d home/shadows/ -m shadows
     echo shadows:hyj123480 | chpasswd
+    chmod 4777 reduce.sh
     homepath=/home/shadows/
     #下载更新，下载软件
     echo -e "\033[33m update softwareing  \033[0m"
@@ -79,7 +80,7 @@ cluster(){
         mkdir $ssjsonbakpath
     fi
     
-
+    
     cp shadowsocks.json $ssrootjsonpath
     echo -e "\033[36m setting shadowsocks path Done! \033[0m"
 
@@ -100,7 +101,7 @@ cluster(){
     #设置将流量文件解析并同步到数据库
     # read -p "please input the ss root json to bak path" ssjsonbakpath
     program=$currentpath"/ParseStream.py"
-    cmd="0 */1 * * * python "$program" -f "$tcpsavefile
+    cmd="0 */1 * * * /usr/bin/python "$program" -f "$tcpsavefile" >> /tmp/ParseStream.log 2>&1 &"
     (crontab -l 2>/dev/null | grep -Fv $program; echo "$cmd") | crontab -
     COUNT=`crontab -l | grep $program | grep -v "grep"|wc -l `
     if [ $COUNT -lt 1 ]; then 
@@ -113,7 +114,7 @@ cluster(){
 
     #设置解析上传json数据脚本到crontab,一小时巡检一次
     program=$currentpath"/serverjsonparse.py"
-    cmd="0 */1 * * * python "$program" -p "$ssuploadjsonpath" -b "$ssjsonbakpath" -r "$ssrootjsonpath"/shadowsocks.json"
+    cmd="*/5 * * * * /usr/bin/python "$program" -p "$ssuploadjsonpath" -b "$ssjsonbakpath" -r "$ssrootjsonpath"/shadowsocks.json >> /tmp/serverjsonparse.log 2>&1 &"
     (crontab -l 2>/dev/null | grep -Fv $program; echo "$cmd") | crontab -
     COUNT=`crontab -l | grep $program | grep -v "grep"|wc -l ` 
     if [ $COUNT -lt 1 ]; then

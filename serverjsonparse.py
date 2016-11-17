@@ -28,7 +28,7 @@ def shell_exec(cmd):
 
 #重启ss服务
 def restartss():
-    (status, output) = shell_exec("ssserver -c /root/ssrootjsonpath/shadowsocks.json -d restart")
+    (status, output) = shell_exec("/usr/bin/python /usr/local/bin/ssserver -c /home/shadows/ssrootjsonpath/shadowsocks.json -d restart")
     if output == 0 and output.find("stopped") >=0 :
         logger.info("restart shadow ok!")
         return True
@@ -108,7 +108,7 @@ def generatejson(path):
         with open(rootjsonfile, 'wb') as fp1:
             fp1.write(json.dumps(rootssjson, indent=4))
     restartss()
-    logger.info("update done!")s
+    logger.info("update done!")
 
 def stopjson(path):
     flag = False

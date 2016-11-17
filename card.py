@@ -20,9 +20,9 @@ def getrandom(number):
     m2 = hashlib.md5() 
     for num in xrange(number):
         m2.update("{0}{1}".format(time.time(), random()))
-        cardnum.append(m2.hexdigest())
+        cardnum.append(m2.hexdigest()[16:])
         m2.update("{0}{1}".format(time.time(), random()))
-        cardpass.append(m2.hexdigest())
+        cardpass.append(m2.hexdigest()[16:])
 
 def main():
     if len(sys.argv) < 2:
@@ -35,12 +35,13 @@ def main():
     fp = open(filename, 'ab')
     getrandom(number)
     for num in xrange(number):
-        sql = "insert into s_card(`cardnum`, `cardpass`, `money`) values('{0}', '{1}',{2})".format(cardnum[num], cardpass[num], money)
+        sql = "insert into s_cardpass(`cardnum`, `cardpass`, `money`) values('{0}', '{1}',{2})".format(cardnum[num], cardpass[num], money)
         fp.write("{0} {1} \n".format(cardnum[num], cardpass[num]))
         mysql.insert(sql)
         print "[*] {0} ok".format(num)
     fp.close()
-    print  "Done!"
+    mysql.close()
+    print "Done!"
 
 if __name__ == '__main__':
     main()
