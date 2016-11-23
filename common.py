@@ -12,6 +12,8 @@ from ftpupload import FtpAction
 
 CONFIG_PATH = 'config.ini'
 config = None
+ONE_DAY_UNIX = 86400
+
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',

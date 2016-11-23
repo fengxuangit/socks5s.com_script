@@ -55,14 +55,14 @@ def insertdb(cardpass):
 #如果用户的流量超过，停止用户访问
 def stopUser():
     logger.info("start stoping check")
-    sql = "select id,port from s_user where streamcount < 0"
+    sql = "select id,port from s_ssaccount where streamcount < 0"
     mysql.query(sql)
     users = mysql.fetchAllRows()
     if len(users) == 0:
         return None
     portlist = []
     for user in users:
-        sql = "update s_user set streamcount=0,port=0,sspass='' where id={0}".format(user[0])
+        sql = "update s_user set streamcount=0,username='None' where id={0}".format(user[0])
         mysql.update(sql)
         portlist.append(user[1])
     logger.info("uploading stop file...")
@@ -72,13 +72,12 @@ def stopUser():
 
 #每天将付费用户的使用天数-1
 def reducetime():
-    sql = "select buytime,port,id from s_user where buytime > 0"
+    sql = "select buytime,port,id,streamcount from s_ssaccount where buytime > 0"
     mysql.query(sql)
     vip = mysql.fetchAllRows()
+    now = int(time.time())
     for v in vip:
-        sql = "update s_user set buytime={0} where id={1}".format(int(v[0]) -1, v[2])
-        mysql.update(sql)
-        if int(v[0]) == 1:
+        if int(v[0]) <= now or int(v[3]) <= 0:
             deleteUser({'port':v[1], 'id':v[2]})
     logger.info("reducetime ok!")
 
@@ -86,9 +85,7 @@ def reducetime():
 #将用户的ss账号的密码置空, s_ssaccount账号将状态置为0，密码修改
 def deleteUser(info):
     newpass = getrandomchar()
-    sql = "update s_ssaccount set pass='{0}',status=0 where port={1}".format(newpass, info['port'])
-    mysql.update(sql)
-    sql = "update s_user set port=0,sspass='',streamcount=0 where id={0}".format(info['id'])
+    sql = "update s_ssaccount set pass='{0}',status=0,username='None',streamcount=0,buytime=0 where port={1}".format(newpass, info['port'])
     mysql.update(sql)
     updateportpass = {info['port']:newpass}
     filename = JsonParse(updateportpass, 'update')

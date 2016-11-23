@@ -8,4 +8,4 @@ if [ $# -lt 1 ];then
 fi
 
 
-/usr/bin/python /home/fengxuan/shadowscript/reduce.py -z fuck01 -m async -p $1 >> /tmp/reduce.log 2>&1 &
+/usr/bin/python /Users/apple/wwwroot/webapp/shadowscript/reduce.py -z fuck01 -m async -p $1 >> /tmp/reduce.log 2>&1 &
