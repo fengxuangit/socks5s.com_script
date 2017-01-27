@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
- 
+#author:fengxuan
+
+
 #显示菜单(单选)
 display_menu(){
 local soft=$1

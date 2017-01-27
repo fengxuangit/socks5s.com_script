@@ -108,6 +108,8 @@ def async(port):
     logger.info("upload rechange file ok!")
 
 
+def stream(filename)
+    c
 
 def usage():
     parser=OptionParser()
